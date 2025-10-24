@@ -27,10 +27,11 @@ exports.register = async (req, res) => {
     });
 
     const token = generateAuthToken({ id: user._id, role: user.role, universityRef: user.universityRef });
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 86400000,
     });
 
@@ -53,10 +54,11 @@ exports.login = async (req, res) => {
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = generateAuthToken({ id: user._id, role: user.role, universityRef: user.universityRef });
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 86400000,
     });
 
@@ -68,7 +70,13 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  res.clearCookie('auth_token');
+  const isProd = process.env.NODE_ENV === 'production';
+  // Clear with matching attributes to ensure deletion cross-site in production
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+  });
   return res.json({ message: 'Logged out' });
 };
 
