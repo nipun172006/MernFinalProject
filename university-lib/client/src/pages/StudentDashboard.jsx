@@ -1,0 +1,169 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import axios from 'axios'
+import { useAuth } from '../context/AuthContext.jsx'
+import SiteHeader from '../components/SiteHeader'
+import BookCard from '../components/BookCard'
+import { Search, Loader2, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+export default function StudentDashboard() {
+  const { logout } = useAuth()
+  const [available, setAvailable] = useState([])
+  const [allBooks, setAllBooks] = useState([])
+  const [predictions, setPredictions] = useState([])
+  const [loans, setLoans] = useState([])
+  const [settings, setSettings] = useState(null)
+  const [query, setQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState('')
+  const abortRef = useRef(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
+
+  const load = async () => {
+    try {
+      const [all, a, p, l, s] = await Promise.all([
+        axios.get('/api/student/books/all'),
+        axios.get('/api/student/books/available'),
+        axios.get('/api/student/books/predictions'),
+        axios.get('/api/loans/mine'),
+        axios.get('/api/university/settings'),
+      ])
+      setAllBooks(all.data)
+      setAvailable(a.data)
+      setPredictions(p.data)
+      setLoans(l.data)
+      setSettings(s.data)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to load')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const checkout = async (bookItemId, durationDays) => {
+    await axios.post('/api/loans/checkout', { bookItemId, durationDays })
+    setToast('Book borrowed successfully')
+    setTimeout(() => setToast(''), 2500)
+    await load()
+  }
+
+  const returnLoan = async (loanId) => {
+    await axios.post(`/api/loans/return/${loanId}`)
+    await load()
+  }
+
+  // Live search with debounce + abort
+  useEffect(() => {
+    setSearchError('')
+    if (!query.trim()) {
+      setSearchResults([])
+      setSearchLoading(false)
+      abortRef.current?.abort?.()
+      return
+    }
+
+    setSearchLoading(true)
+    const controller = new AbortController()
+    abortRef.current?.abort?.()
+    abortRef.current = controller
+
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await axios.get('/api/student/books/search', { params: { q: query }, signal: controller.signal })
+        setSearchResults(data)
+      } catch (err) {
+        if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') return
+        setSearchError(err?.response?.data?.message || 'Search failed')
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 350)
+
+    return () => {
+      clearTimeout(t)
+      controller.abort()
+    }
+  }, [query])
+
+  // No sidebar/anchors on this page anymore; dedicated pages handle sections
+
+  if (loading) return <div className="p-6">Loading...</div>
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+      <main className="flex-1 bg-slate-50">
+        <div className="w-full px-4 py-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-extrabold text-brand-navy">Discover</h2>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to="/dashboard/soon" className="btn-outline">Available Soon</Link>
+              <Link to="/dashboard/loans" className="btn-outline">My Loans</Link>
+            </div>
+            {error && <div className="mt-3 text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">{error}</div>}
+            {toast && (
+              <div className="fixed right-6 top-20 z-50 card bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 shadow-sm">{toast}</div>
+            )}
+
+            <div className="mt-6 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  className="input pl-9 pr-9"
+                  placeholder="Search by title, author or ISBN"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                    onClick={() => setQuery('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              {searchLoading && <Loader2 className="animate-spin h-5 w-5 text-brand-accent" />}
+            </div>
+
+            {searchError && <div className="mt-3 text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">{searchError}</div>}
+
+            {query && !searchLoading && !searchResults.length && (
+              <div className="mt-4 text-slate-500">No matches found.</div>
+            )}
+
+            {!!searchResults.length && (
+              <section className="mt-6">
+                <h3 className="text-xl font-semibold text-slate-800">Search Results</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {searchResults.map((b) => (
+                    <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
+                  ))}
+                </div>
+              </section>
+            )}
+            <section className="mt-10">
+              <h3 className="text-xl font-semibold text-slate-800">All Books</h3>
+              {allBooks.length === 0 ? (
+                <div className="text-slate-500">No books yet. Ask your admin to add books.</div>
+              ) : (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-2">
+                  {allBooks.map((b) => (
+                    <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
+                  ))}
+                </div>
+              )}
+            </section>
+        </div>
+      </main>
+    </div>
+  )
+}
