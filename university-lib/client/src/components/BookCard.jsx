@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { CheckCircle2, Clock, Trash2, Star } from 'lucide-react'
+import { CheckCircle2, Clock, Trash2, Star, Pencil } from 'lucide-react'
 
-export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings, onDelete }) {
+export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings, onDelete, onEdit }) {
   const available = (book?.availableCopies ?? 0) > 0
   const defaultDays = Math.max(1, Number(settings?.loanDaysDefault || 7))
   const [durationDays, setDurationDays] = useState(defaultDays)
@@ -43,6 +43,17 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200">
                 <Star className="h-3.5 w-3.5 text-amber-500" /> {Number(book.rating).toFixed(1)}
               </span>
+            )}
+            {onEdit && (
+              <button
+                type="button"
+                className="btn-ghost p-1.5 rounded-md hover:bg-slate-100 text-slate-700"
+                aria-label="Edit book"
+                onClick={() => onEdit(book)}
+                title="Edit book"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
             )}
             {onDelete && (
               <button

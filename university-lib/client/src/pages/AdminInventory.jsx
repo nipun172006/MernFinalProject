@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import SiteHeader from '../components/SiteHeader'
 import BookCard from '../components/BookCard'
+import EditBookModal from '../components/EditBookModal'
 
 export default function AdminInventory() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
+  const [editing, setEditing] = useState(null)
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +43,7 @@ export default function AdminInventory() {
                 <BookCard
                   key={b._id}
                   book={b}
+                  onEdit={(bk) => setEditing(bk)}
                   onDelete={async (id) => {
                     if (!confirm('Delete this book?')) return
                     try {
@@ -55,6 +58,18 @@ export default function AdminInventory() {
                 />
               ))}
             </div>
+          )}
+          {editing && (
+            <EditBookModal
+              book={editing}
+              onClose={() => setEditing(null)}
+              onSaved={(updated) => {
+                setBooks((prev) => prev.map((x) => (x._id === updated._id ? updated : x)))
+                setEditing(null)
+                setToast('Book updated')
+                setTimeout(() => setToast(''), 2000)
+              }}
+            />
           )}
         </div>
       </main>
