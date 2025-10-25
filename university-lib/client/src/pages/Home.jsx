@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from '../components/SiteHeader'
-import { BookOpen, Users, Shield } from 'lucide-react'
+import { BookOpen, Users, Shield, ArrowRight, Building2, LogIn } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -22,19 +22,70 @@ export default function Home() {
                 <p className="mt-5 text-lg text-slate-600 max-w-prose">
                   Borrow smarter, manage faster, and keep access limited to your campus with domain-based accounts.
                 </p>
-                <div className="mt-8">
-                  <Link to="/login" className="btn bg-brand-accent text-white w-full md:w-auto px-6 py-3 text-base">
-                    Login / Start Session
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Link to="/login/student" className="btn w-full md:w-auto px-6 py-3 text-base">
+                    I'm a Student <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                  <Link to="/login/admin" className="btn-outline w-full md:w-auto px-6 py-3 text-base">
+                    I'm an Admin <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </div>
               </div>
 
               <div className="hidden md:block">
                 <div className="rounded-2xl border border-white/40 bg-white/60 backdrop-blur-xl shadow-xl p-6">
-                  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXBBPZzW30rg3w8fvEUKGpCayryJswGqQkVIZijCpQn1V3aZVlfRZiJfEIRsIgajy9rwE&usqp=CAU" alt="Library preview" className="h-64 w-full object-cover rounded-lg" />
+                  <img src="https://i.pinimg.com/1200x/aa/f8/32/aaf832207e2468ecf13b21405ed66d64.jpg" alt="Library preview" className="h-64 w-full object-cover rounded-lg" />
                   <p className="text-sm text-slate-600 mt-3">
                     Preview your library cards and inventory dashboard.
                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Getting started: clear onboarding for first-time visitors */}
+        <section className="bg-white">
+          <div className="mx-auto max-w-7xl px-6 py-12">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-brand-navy">Getting Started</h2>
+            <p className="text-slate-600 mt-2 max-w-3xl">Follow the quick steps below to begin. Choose the path that applies to you—student or administrator.</p>
+
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
+              {/* Student card */}
+              <div className="card p-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-brand-accent/10 text-brand-accent flex items-center justify-center">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-900">I'm a Student</h3>
+                </div>
+                <ol className="mt-4 space-y-2 text-sm text-slate-700 list-decimal list-inside">
+                  <li>Open Universities and find your campus.</li>
+                  <li>Sign in with your campus email.</li>
+                  <li>Search, check availability, and borrow books.</li>
+                </ol>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link to="/universities" className="btn-outline"><Building2 className="h-4 w-4 mr-2" /> Explore Universities</Link>
+                  <Link to="/login/student" className="btn"><LogIn className="h-4 w-4 mr-2" /> Student Login</Link>
+                </div>
+              </div>
+
+              {/* Admin card */}
+              <div className="card p-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-brand-navy/10 text-brand-navy flex items-center justify-center">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-900">I'm an Admin</h3>
+                </div>
+                <ol className="mt-4 space-y-2 text-sm text-slate-700 list-decimal list-inside">
+                  <li>Create your university space.</li>
+                  <li>Import your current catalog via CSV.</li>
+                  <li>Enable borrowing and monitor activity.</li>
+                </ol>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link to="/onboarding" className="btn">+ Add University</Link>
+                  <Link to="/login/admin" className="btn-outline">Admin Login</Link>
                 </div>
               </div>
             </div>

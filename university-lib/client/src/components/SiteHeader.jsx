@@ -34,7 +34,6 @@ export default function SiteHeader() {
               <Link to="/onboarding" className="btn bg-brand-accent">+ Add University</Link>
               <Link to="/login/student" className="btn bg-brand-accent">Student Login</Link>
               <Link to="/login/admin" className="btn bg-brand-accent">Admin Login</Link>
-              <Link to="/login" className="btn bg-brand-accent">Login</Link>
             </>
           ) : (
             <button onClick={logout} className="btn bg-red-500 hover:opacity-90">Logout</button>
