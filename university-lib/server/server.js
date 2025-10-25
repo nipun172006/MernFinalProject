@@ -13,6 +13,8 @@ const University = require('./models/University');
 
 const app = express();
 
+const { generalLimiter, authLimiter } = require('./middleware/rateLimiters');
+
 // CORS configuration (allow common local origins plus env override)
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 const allowedOrigins = [CLIENT_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
@@ -28,6 +30,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+// Apply a general limiter across API
+app.use('/api', generalLimiter);
 
 // Track DB status for health reporting
 let lastDbError = null;
@@ -40,7 +44,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
+// Auth has stricter limiter
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/loans', loanRoutes);

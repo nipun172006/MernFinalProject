@@ -4,35 +4,20 @@ const role = require('../middleware/roleMiddleware');
 const BookItem = require('../models/BookItem');
 const AdminNotification = require('../models/AdminNotification');
 const University = require('../models/University');
+const { adminMutationsLimiter, csvImportLimiter } = require('../middleware/rateLimiters');
+const { validateBookCreate, validateBookUpdate, validateSettingsUpdate } = require('../middleware/validate');
 
 // All routes here are protected and require Admin role
 router.use(auth, role('Admin'));
 
 // POST /api/admin/books - create a new book for admin's university
-router.post('/books', async (req, res) => {
+router.post('/books', adminMutationsLimiter, async (req, res) => {
   try {
-    const { title, author, ISBN, coverImageUrl, description, totalCopies, genres, rating } = req.body;
-    if (!title || !ISBN || totalCopies == null) {
-      return res.status(400).json({ message: 'title, ISBN, totalCopies required' });
-    }
-
-    // Normalize genres: accept array or comma/semicolon/pipe separated string
-    let genresArr = []
-    if (Array.isArray(genres)) genresArr = genres.filter(Boolean).map((g) => String(g).trim()).filter(Boolean)
-    else if (typeof genres === 'string') genresArr = genres.split(/[;|,]/g).map((g) => g.trim()).filter(Boolean)
-
-    const r = Number(rating)
-    const ratingVal = Number.isFinite(r) ? Math.max(0, Math.min(5, r)) : undefined
+    const { ok, errors, value } = validateBookCreate(req.body)
+    if (!ok) return res.status(400).json({ message: errors.join(', ') })
 
     const book = await BookItem.create({
-      title,
-      author,
-      ISBN,
-      coverImageUrl,
-      description,
-      totalCopies: Number(totalCopies),
-      genres: genresArr,
-      ...(ratingVal !== undefined ? { rating: ratingVal } : {}),
+      ...value,
       universityRef: req.user.universityRef,
     });
 
@@ -76,7 +61,7 @@ router.get('/books', async (req, res) => {
 
 // Bulk import books via CSV text
 // POST /api/admin/books/import  { csvText: string }
-router.post('/books/import', async (req, res) => {
+router.post('/books/import', csvImportLimiter, async (req, res) => {
   try {
     const { csvText } = req.body || {};
     if (!csvText || typeof csvText !== 'string') {
@@ -165,21 +150,13 @@ router.patch('/university/settings', async (req, res) => {
   try {
     const updates = {}
     const { loanDaysDefault, finePerDay } = req.body || {}
-    if (loanDaysDefault !== undefined) {
-      const v = Number(loanDaysDefault)
-      if (!Number.isFinite(v) || v < 1) return res.status(400).json({ message: 'loanDaysDefault must be >= 1' })
-      updates.loanDaysDefault = Math.floor(v)
-    }
-    if (finePerDay !== undefined) {
-      const v = Number(finePerDay)
-      if (!Number.isFinite(v) || v < 0) return res.status(400).json({ message: 'finePerDay must be >= 0' })
-      updates.finePerDay = v
-    }
-    if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
+    const { ok, errors, value } = validateSettingsUpdate(req.body || {})
+    if (!ok) return res.status(400).json({ message: errors.join(', ') })
+    if (Object.keys(value).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
 
     const uni = await University.findByIdAndUpdate(
       req.user.universityRef,
-      { $set: updates },
+      { $set: value },
       { new: true, projection: 'loanDaysDefault finePerDay name domain' }
     ).lean()
     if (!uni) return res.status(404).json({ message: 'University not found' })
@@ -191,36 +168,16 @@ router.patch('/university/settings', async (req, res) => {
 })
 
 // PUT /api/admin/books/:id - update editable fields of a book in this university
-router.put('/books/:id', async (req, res) => {
+router.put('/books/:id', adminMutationsLimiter, async (req, res) => {
   try {
     const { id } = req.params
-    const { title, author, coverImageUrl, description, totalCopies, genres, rating } = req.body || {}
-    const update = {}
-    if (title !== undefined) update.title = String(title)
-    if (author !== undefined) update.author = String(author)
-    if (coverImageUrl !== undefined) update.coverImageUrl = String(coverImageUrl)
-    if (description !== undefined) update.description = String(description)
-    if (totalCopies !== undefined) {
-      const v = Number(totalCopies)
-      if (!Number.isFinite(v) || v < 0) return res.status(400).json({ message: 'totalCopies must be >= 0' })
-      update.totalCopies = Math.floor(v)
-    }
-    if (genres !== undefined) {
-      let genresArr = []
-      if (Array.isArray(genres)) genresArr = genres.filter(Boolean).map((g) => String(g).trim()).filter(Boolean)
-      else if (typeof genres === 'string') genresArr = genres.split(/[;|,]/g).map((g) => g.trim()).filter(Boolean)
-      update.genres = genresArr
-    }
-    if (rating !== undefined) {
-      const r = Number(rating)
-      if (!Number.isFinite(r) || r < 0 || r > 5) return res.status(400).json({ message: 'rating must be between 0 and 5' })
-      update.rating = r
-    }
-    if (Object.keys(update).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
+    const { ok, errors, value } = validateBookUpdate(req.body || {})
+    if (!ok) return res.status(400).json({ message: errors.join(', ') })
+    if (Object.keys(value).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
 
     const book = await BookItem.findOneAndUpdate(
       { _id: id, universityRef: req.user.universityRef },
-      { $set: update },
+      { $set: value },
       { new: true }
     )
     if (!book) return res.status(404).json({ message: 'Book not found' })
@@ -232,7 +189,7 @@ router.put('/books/:id', async (req, res) => {
 })
 
 // DELETE /api/admin/books/:id - remove a book from this university
-router.delete('/books/:id', async (req, res) => {
+router.delete('/books/:id', adminMutationsLimiter, async (req, res) => {
   try {
     const { id } = req.params
     const book = await BookItem.findOneAndDelete({ _id: id, universityRef: req.user.universityRef })
