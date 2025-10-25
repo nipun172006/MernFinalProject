@@ -87,12 +87,16 @@ export default function AdminAddBook() {
 
           <section className="mt-6">
             <h3 className="text-lg font-semibold text-slate-800">Bulk Import (CSV)</h3>
-            <p className="text-sm text-slate-600 mt-1">Paste CSV with headers: title,author,ISBN,coverImageUrl,description,totalCopies</p>
+            <p className="text-sm text-slate-600 mt-1">Paste CSV with headers: title,author,ISBN,coverImageUrl,description,totalCopies,genres,rating</p>
             <form onSubmit={importCsv} className="card p-4 mt-3 space-y-3">
-              <textarea className="textarea" rows={6} placeholder="title,author,ISBN,coverImageUrl,description,totalCopies" value={csvText} onChange={(e) => setCsvText(e.target.value)} />
+              <textarea className="textarea" rows={12} placeholder="title,author,ISBN,coverImageUrl,description,totalCopies,genres,rating" value={csvText} onChange={(e) => setCsvText(e.target.value)} />
               <div className="flex gap-2">
                 <button className="btn" disabled={importing}>{importing ? 'Importing…' : 'Import CSV'}</button>
-                <button type="button" className="btn-outline" onClick={() => setCsvText(`title,author,ISBN,coverImageUrl,description,totalCopies,genres,rating\nClean Code,Robert C. Martin,9780132350884,https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop,Handbook of agile software craftsmanship,3,software;craft,4.7`)}>
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => setCsvText(`title,author,ISBN,coverImageUrl,description,totalCopies,genres,rating\nClean Code,Robert C. Martin,9780132350884,https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop,Handbook of agile software craftsmanship,3,software;craft,4.7\nThe Pragmatic Programmer,Andrew Hunt,9780201616224,https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=800&auto=format&fit=crop,Classic programming practices guide,4,software;engineering,4.6\nIntroduction to Algorithms,Thomas H. Cormen,9780262046305,https://images.unsplash.com/photo-1517433456452-f9633a875f6f?q=80&w=800&auto=format&fit=crop,Algorithms textbook widely used,2,algorithms;cs,4.5\nThe Great Gatsby,F. Scott Fitzgerald,9780743273565,https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop,Classic American novel,5,classics;fiction,4.1\nTo Kill a Mockingbird,Harper Lee,9780060935467,https://images.unsplash.com/photo-1495446815901-a7297e633e8d?q=80&w=800&auto=format&fit=crop,Novel on justice and moral growth,4,classics;fiction,4.3\nA Brief History of Time,Stephen Hawking,9780553380163,https://images.unsplash.com/photo-1465101162946-4377e57745c3?q=80&w=800&auto=format&fit=crop,Popular science cosmology,3,science;nonfiction,4.2\nSapiens,Yuval Noah Harari,9780062316097,https://images.unsplash.com/photo-1495446815901-21f1b6adae1a?q=80&w=800&auto=format&fit=crop,History of humankind overview,5,history;nonfiction,4.4\nThe Hobbit,J.R.R. Tolkien,9780547928227,https://images.unsplash.com/photo-1455885666463-9f9ae3f6fd21?q=80&w=800&auto=format&fit=crop,Fantasy adventure prelude to LOTR,6,fantasy;adventure,4.6\nDune,Frank Herbert,9780441013593,https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=800&auto=format&fit=crop,Epic science fiction saga,4,scifi;classic,4.5\nThe Design of Everyday Things,Don Norman,9780465050659,https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop,Design and usability principles,3,design;ux,4.3`)}
+                >
                   Fill Sample
                 </button>
               </div>
