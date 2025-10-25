@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminActivity from './pages/AdminActivity'
 import AdminInventory from './pages/AdminInventory'
 import AdminAddBook from './pages/AdminAddBook'
+import AdminSettings from './pages/AdminSettings'
 import Home from './pages/Home'
 import Onboarding from './pages/Onboarding'
 import Universities from './pages/Universities'
@@ -39,6 +40,7 @@ function RootRoutes() {
             <Route path="/admin/activity" element={<AdminActivity />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
             <Route path="/admin/add" element={<AdminAddBook />} />
+    <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

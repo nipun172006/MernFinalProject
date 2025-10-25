@@ -92,10 +92,20 @@ npm run preview
 - `POST /api/auth/login` – Login and set cookie
 - `POST /api/auth/logout` – Clear cookie
 - `GET  /api/auth/status` – Current session
+- `GET  /api/health` – App + DB health status
+- `GET  /api/universities` – Public list of universities (name, domain, createdAt)
+- `GET  /api/university/settings` – Current user's university settings (loanDaysDefault, finePerDay)
 - `GET  /api/admin/books` – [Admin] List inventory for admin's university
 - `POST /api/admin/books` – [Admin] Add a new book (auto-links to admin's university)
+- `POST /api/admin/books/import` – [Admin] Bulk import/update books from CSV (headers: title,author,ISBN,coverImageUrl,description,totalCopies)
+- `GET  /api/admin/notifications` – [Admin] Recent borrow/return notifications
+- `PATCH /api/admin/university/settings` – [Admin] Update university loanDaysDefault and finePerDay
+- `PUT   /api/admin/books/:id` – [Admin] Update book fields (title, author, coverImageUrl, description, totalCopies)
+- `DELETE/ api/admin/books/:id` – [Admin] Delete a book in this university
 - `GET  /api/student/books/available` – [Student] Books with available copies now
 - `GET  /api/student/books/predictions` – [Student] Soonest due date per book
+- `GET  /api/student/books/all` – [Student] All books with enriched availability fields
+- `GET  /api/student/books/search?q=term` – [Student] Search by title/author/ISBN (regex)
 - `POST /api/loans/checkout` – Borrow a copy (7-day due)
 - `POST /api/loans/return/:loanId` – Return a loan
 - `GET  /api/loans/mine` – Current user's loans
@@ -103,10 +113,11 @@ npm run preview
 
 ## Notes
 
-- CORS allows `http://localhost:3000` with `credentials: true` (configurable via `CLIENT_ORIGIN`).
-- Axios is set to `withCredentials = true` and `baseURL` via `client/.env.*`.
+ - CORS allows `http://localhost:3000` with `credentials: true` (configurable via `CLIENT_ORIGIN`). For multiple origins (preview/prod), extend the allowlist.
+ - Axios is set to `withCredentials = true` and `baseURL` via `client/.env.*`.
    - Development: `client/.env.development` → `VITE_API_BASE_URL=http://localhost:5002`
    - Production preview: `client/.env.production` → `VITE_API_BASE_URL=http://localhost:5002`
+- Cookies: In production, auth cookies are set with `SameSite=None; Secure` to support cross-site frontends. Ensure HTTPS in production.
 - For Admin users, create a user with `role: 'Admin'` manually or via a seed script and ensure `universityRef` is set.
 
 ### Book model fields

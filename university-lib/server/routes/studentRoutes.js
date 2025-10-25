@@ -35,6 +35,8 @@ router.get('/books/all', async (req, res) => {
   }
 });
 
+module.exports = router;
+
 // GET /api/student/books/available
 router.get('/books/available', async (req, res) => {
   try {
@@ -86,8 +88,6 @@ router.get('/books/predictions', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-
-module.exports = router;
 
 // GET /api/student/books/search?q=term
 router.get('/books/search', async (req, res) => {

@@ -19,6 +19,7 @@ export default function SiteHeader() {
               <Link to="/admin/activity" className={pathname.startsWith('/admin/activity') ? tabActive : tabInactive}>Activity</Link>
               <Link to="/admin/inventory" className={(pathname.startsWith('/admin/inventory') || pathname === '/admin/dashboard') ? tabActive : tabInactive}>Inventory</Link>
               <Link to="/admin/add" className={pathname.startsWith('/admin/add') ? tabActive : tabInactive}>Add Books</Link>
+              <Link to="/admin/settings" className={pathname.startsWith('/admin/settings') ? tabActive : tabInactive}>Settings</Link>
             </>
           )}
           {isAuthenticated && user?.role === 'Student' && (

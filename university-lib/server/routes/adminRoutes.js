@@ -3,6 +3,7 @@ const auth = require('../middleware/authMiddleware');
 const role = require('../middleware/roleMiddleware');
 const BookItem = require('../models/BookItem');
 const AdminNotification = require('../models/AdminNotification');
+const University = require('../models/University');
 
 // All routes here are protected and require Admin role
 router.use(auth, role('Admin'));
@@ -53,8 +54,6 @@ router.get('/books', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-
-module.exports = router;
 
 // Bulk import books via CSV text
 // POST /api/admin/books/import  { csvText: string }
@@ -135,3 +134,79 @@ router.get('/notifications', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
+// PATCH /api/admin/university/settings - update loan/fine settings for this university
+router.patch('/university/settings', async (req, res) => {
+  try {
+    const updates = {}
+    const { loanDaysDefault, finePerDay } = req.body || {}
+    if (loanDaysDefault !== undefined) {
+      const v = Number(loanDaysDefault)
+      if (!Number.isFinite(v) || v < 1) return res.status(400).json({ message: 'loanDaysDefault must be >= 1' })
+      updates.loanDaysDefault = Math.floor(v)
+    }
+    if (finePerDay !== undefined) {
+      const v = Number(finePerDay)
+      if (!Number.isFinite(v) || v < 0) return res.status(400).json({ message: 'finePerDay must be >= 0' })
+      updates.finePerDay = v
+    }
+    if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
+
+    const uni = await University.findByIdAndUpdate(
+      req.user.universityRef,
+      { $set: updates },
+      { new: true, projection: 'loanDaysDefault finePerDay name domain' }
+    ).lean()
+    if (!uni) return res.status(404).json({ message: 'University not found' })
+    return res.json(uni)
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// PUT /api/admin/books/:id - update editable fields of a book in this university
+router.put('/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { title, author, coverImageUrl, description, totalCopies } = req.body || {}
+    const update = {}
+    if (title !== undefined) update.title = String(title)
+    if (author !== undefined) update.author = String(author)
+    if (coverImageUrl !== undefined) update.coverImageUrl = String(coverImageUrl)
+    if (description !== undefined) update.description = String(description)
+    if (totalCopies !== undefined) {
+      const v = Number(totalCopies)
+      if (!Number.isFinite(v) || v < 0) return res.status(400).json({ message: 'totalCopies must be >= 0' })
+      update.totalCopies = Math.floor(v)
+    }
+    if (Object.keys(update).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
+
+    const book = await BookItem.findOneAndUpdate(
+      { _id: id, universityRef: req.user.universityRef },
+      { $set: update },
+      { new: true }
+    )
+    if (!book) return res.status(404).json({ message: 'Book not found' })
+    return res.json(book)
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// DELETE /api/admin/books/:id - remove a book from this university
+router.delete('/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const book = await BookItem.findOneAndDelete({ _id: id, universityRef: req.user.universityRef })
+    if (!book) return res.status(404).json({ message: 'Book not found' })
+    return res.json({ deleted: true })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// Ensure export is at the bottom so all routes are mounted
+module.exports = router;

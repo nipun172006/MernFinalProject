@@ -7,6 +7,7 @@ export default function AdminInventory() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -31,12 +32,33 @@ export default function AdminInventory() {
         <div className="w-full px-4 py-6">
           <h2 className="text-2xl font-bold text-slate-900">Inventory</h2>
           {error && <div className="mt-3 text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">{error}</div>}
+          {toast && <div className="fixed right-6 top-20 z-50 card bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 shadow-sm">{toast}</div>}
           {books.length === 0 ? (
             <div className="mt-3 text-slate-500">No books yet.</div>
           ) : (
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {books.map((b) => (
-                <BookCard key={b._id} book={b} />
+                <div key={b._id}>
+                  <BookCard book={b} />
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="btn-outline text-red-600 border-red-300"
+                      onClick={async () => {
+                        if (!confirm('Delete this book?')) return
+                        try {
+                          await axios.delete(`/api/admin/books/${b._id}`)
+                          setBooks((prev) => prev.filter((x) => x._id !== b._id))
+                          setToast('Book deleted')
+                          setTimeout(() => setToast(''), 2000)
+                        } catch (err) {
+                          alert(err?.response?.data?.message || 'Delete failed')
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
