@@ -16,9 +16,16 @@ router.get('/books/all', async (req, res) => {
       if (list.length) filter.genres = { $in: list }
     }
 
-    let query = BookItem.find(filter)
-      
-    const books = await query
+    let page = Math.max(1, Number(req.query.page || 1))
+    let limit = Math.max(1, Math.min(100, Number(req.query.limit || 12)))
+    const sortParam = String(req.query.sort || '').toLowerCase()
+    const sortSpec = sortParam === 'rating' ? { rating: -1 } : sortParam === 'popularity' ? { borrowCount: -1 } : { title: 1 }
+
+    const total = await BookItem.countDocuments(filter)
+    const books = await BookItem.find(filter)
+      .sort(sortSpec)
+      .skip((page - 1) * limit)
+      .limit(limit)
       .populate('activeLoans')
       .lean({ virtuals: true });
 
@@ -38,12 +45,8 @@ router.get('/books/all', async (req, res) => {
       return { ...b, availableCopies: available, nextAvailableInDays, soonestDueDate: minDue };
     });
 
-    // Sorting
-    const sort = String(req.query.sort || '').toLowerCase()
-    if (sort === 'rating') enriched.sort((a,b) => (b.rating||0) - (a.rating||0))
-    else if (sort === 'popularity') enriched.sort((a,b) => (b.borrowCount||0) - (a.borrowCount||0))
-
-    return res.json(enriched);
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+    return res.json({ items: enriched, page, limit, total, totalPages })
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
@@ -121,7 +124,18 @@ router.get('/books/search', async (req, res) => {
       if (list.length) filter.genres = { $in: list }
     }
 
-    const books = await BookItem.find(filter).populate('activeLoans').lean({ virtuals: true });
+    let page = Math.max(1, Number(req.query.page || 1))
+    let limit = Math.max(1, Math.min(100, Number(req.query.limit || 12)))
+    const sortParam = String(req.query.sort || '').toLowerCase()
+    const sortSpec = sortParam === 'rating' ? { rating: -1 } : sortParam === 'popularity' ? { borrowCount: -1 } : { title: 1 }
+
+    const total = await BookItem.countDocuments(filter)
+    const books = await BookItem.find(filter)
+      .sort(sortSpec)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('activeLoans')
+      .lean({ virtuals: true });
 
     const dayMs = 24 * 60 * 60 * 1000;
     let enriched = books.map((b) => {
@@ -138,12 +152,8 @@ router.get('/books/search', async (req, res) => {
       return { ...b, availableCopies: available, nextAvailableInDays, soonestDueDate: minDue };
     });
 
-    // Sorting
-    const sort = String(req.query.sort || '').toLowerCase()
-    if (sort === 'rating') enriched.sort((a,b) => (b.rating||0) - (a.rating||0))
-    else if (sort === 'popularity') enriched.sort((a,b) => (b.borrowCount||0) - (a.borrowCount||0))
-
-    return res.json(enriched);
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+    return res.json({ items: enriched, page, limit, total, totalPages });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });

@@ -21,6 +21,11 @@ export default function StudentDashboard() {
   const [genres, setGenres] = useState([])
   const [selectedGenres, setSelectedGenres] = useState([])
   const [sortBy, setSortBy] = useState('') // '', 'rating', 'popularity'
+  const [pageAll, setPageAll] = useState(1)
+  const [totalPagesAll, setTotalPagesAll] = useState(1)
+  const [limit] = useState(12)
+  const [pageSearch, setPageSearch] = useState(1)
+  const [totalPagesSearch, setTotalPagesSearch] = useState(1)
   const abortRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -29,14 +34,15 @@ export default function StudentDashboard() {
   const load = async () => {
     try {
       const [all, a, p, l, s, g] = await Promise.all([
-        axios.get('/api/student/books/all', { params: { genres: selectedGenres.join(','), sort: sortBy } }),
+        axios.get('/api/student/books/all', { params: { genres: selectedGenres.join(','), sort: sortBy, page: pageAll, limit } }),
         axios.get('/api/student/books/available'),
         axios.get('/api/student/books/predictions'),
         axios.get('/api/loans/mine'),
         axios.get('/api/university/settings'),
         axios.get('/api/student/genres'),
       ])
-      setAllBooks(all.data)
+      setAllBooks(all.data?.items || [])
+      setTotalPagesAll(all.data?.totalPages || 1)
       setAvailable(a.data)
       setPredictions(p.data)
       setLoans(l.data)
@@ -49,7 +55,8 @@ export default function StudentDashboard() {
     }
   }
 
-  useEffect(() => { load() }, [selectedGenres.join(','), sortBy])
+  useEffect(() => { setPageAll(1) }, [selectedGenres.join(','), sortBy])
+  useEffect(() => { load() }, [selectedGenres.join(','), sortBy, pageAll])
 
   const checkout = async (bookItemId, durationDays) => {
     await axios.post('/api/loans/checkout', { bookItemId, durationDays })
@@ -68,6 +75,8 @@ export default function StudentDashboard() {
     setSearchError('')
     if (!query.trim()) {
       setSearchResults([])
+      setTotalPagesSearch(1)
+      setPageSearch(1)
       setSearchLoading(false)
       abortRef.current?.abort?.()
       return
@@ -80,8 +89,12 @@ export default function StudentDashboard() {
 
     const t = setTimeout(async () => {
       try {
-  const { data } = await axios.get('/api/student/books/search', { params: { q: query, genres: selectedGenres.join(','), sort: sortBy }, signal: controller.signal })
-        setSearchResults(data)
+        const { data } = await axios.get('/api/student/books/search', {
+          params: { q: query, genres: selectedGenres.join(','), sort: sortBy, page: pageSearch, limit },
+          signal: controller.signal,
+        })
+        setSearchResults(data?.items || [])
+        setTotalPagesSearch(data?.totalPages || 1)
       } catch (err) {
         if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') return
         setSearchError(err?.response?.data?.message || 'Search failed')
@@ -94,7 +107,7 @@ export default function StudentDashboard() {
       clearTimeout(t)
       controller.abort()
     }
-  }, [query])
+  }, [query, pageSearch])
 
   // Helper: apply availability filter to a list of books
   const filterBooksByStatus = (arr) => {
@@ -241,6 +254,13 @@ export default function StudentDashboard() {
                     <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
                   ))}
                 </div>
+                {totalPagesSearch > 1 && (
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    <button className="btn-outline" onClick={()=>setPageSearch((p)=>Math.max(1,p-1))} disabled={pageSearch<=1}>Prev</button>
+                    <span className="text-sm text-slate-600">Page {pageSearch} of {totalPagesSearch}</span>
+                    <button className="btn-outline" onClick={()=>setPageSearch((p)=>Math.min(totalPagesSearch,p+1))} disabled={pageSearch>=totalPagesSearch}>Next</button>
+                  </div>
+                )}
               </section>
             )}
             <section className="mt-10">
@@ -252,6 +272,13 @@ export default function StudentDashboard() {
                   {filterBooksByStatus(allBooks).map((b) => (
                     <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
                   ))}
+                </div>
+              )}
+              {totalPagesAll > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <button className="btn-outline" onClick={()=>setPageAll((p)=>Math.max(1,p-1))} disabled={pageAll<=1}>Prev</button>
+                  <span className="text-sm text-slate-600">Page {pageAll} of {totalPagesAll}</span>
+                  <button className="btn-outline" onClick={()=>setPageAll((p)=>Math.min(totalPagesAll,p+1))} disabled={pageAll>=totalPagesAll}>Next</button>
                 </div>
               )}
             </section>

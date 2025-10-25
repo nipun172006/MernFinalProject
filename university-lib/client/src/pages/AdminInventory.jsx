@@ -10,12 +10,16 @@ export default function AdminInventory() {
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
   const [editing, setEditing] = useState(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [limit] = useState(12)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await axios.get('/api/admin/books')
-        setBooks(data || [])
+        const { data } = await axios.get('/api/admin/books', { params: { page, limit } })
+        setBooks(data?.items || [])
+        setTotalPages(data?.totalPages || 1)
       } catch (err) {
         setError(err?.response?.data?.message || 'Failed to load')
       } finally {
@@ -23,7 +27,7 @@ export default function AdminInventory() {
       }
     }
     load()
-  }, [])
+  }, [page, limit])
 
   if (loading) return <div className="p-6">Loading...</div>
 
@@ -57,6 +61,13 @@ export default function AdminInventory() {
                   }}
                 />
               ))}
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button className="btn-outline" onClick={() => setPage((p)=>Math.max(1,p-1))} disabled={page<=1}>Prev</button>
+              <span className="text-sm text-slate-600">Page {page} of {totalPages}</span>
+              <button className="btn-outline" onClick={() => setPage((p)=>Math.min(totalPages,p+1))} disabled={page>=totalPages}>Next</button>
             </div>
           )}
           {editing && (

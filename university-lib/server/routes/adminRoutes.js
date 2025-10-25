@@ -43,10 +43,18 @@ router.post('/books', async (req, res) => {
   }
 });
 
-// GET /api/admin/books - list all books for admin's university
+// GET /api/admin/books?page=&limit= - list books with pagination
 router.get('/books', async (req, res) => {
   try {
-    const books = await BookItem.find({ universityRef: req.user.universityRef })
+    let page = Math.max(1, Number(req.query.page || 1))
+    let limit = Math.max(1, Math.min(100, Number(req.query.limit || 12)))
+
+    const filter = { universityRef: req.user.universityRef }
+    const total = await BookItem.countDocuments(filter)
+    const books = await BookItem.find(filter)
+      .sort({ title: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .populate('activeLoans')
       .lean({ virtuals: true });
 
@@ -58,7 +66,8 @@ router.get('/books', async (req, res) => {
       return { ...b, availableCopies: available, totalCopies: total };
     });
 
-    return res.json(enriched);
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+    return res.json({ items: enriched, page, limit, total, totalPages });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
