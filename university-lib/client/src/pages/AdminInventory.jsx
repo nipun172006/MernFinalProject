@@ -38,27 +38,21 @@ export default function AdminInventory() {
           ) : (
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {books.map((b) => (
-                <div key={b._id}>
-                  <BookCard book={b} />
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      className="btn-outline text-red-600 border-red-300"
-                      onClick={async () => {
-                        if (!confirm('Delete this book?')) return
-                        try {
-                          await axios.delete(`/api/admin/books/${b._id}`)
-                          setBooks((prev) => prev.filter((x) => x._id !== b._id))
-                          setToast('Book deleted')
-                          setTimeout(() => setToast(''), 2000)
-                        } catch (err) {
-                          alert(err?.response?.data?.message || 'Delete failed')
-                        }
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                <BookCard
+                  key={b._id}
+                  book={b}
+                  onDelete={async (id) => {
+                    if (!confirm('Delete this book?')) return
+                    try {
+                      await axios.delete(`/api/admin/books/${id}`)
+                      setBooks((prev) => prev.filter((x) => x._id !== id))
+                      setToast('Book deleted')
+                      setTimeout(() => setToast(''), 2000)
+                    } catch (err) {
+                      alert(err?.response?.data?.message || 'Delete failed')
+                    }
+                  }}
+                />
               ))}
             </div>
           )}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { CheckCircle2, Clock } from 'lucide-react'
+import { CheckCircle2, Clock, Trash2 } from 'lucide-react'
 
-export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings }) {
+export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings, onDelete }) {
   const available = (book?.availableCopies ?? 0) > 0
   const defaultDays = Math.max(1, Number(settings?.loanDaysDefault || 7))
   const [durationDays, setDurationDays] = useState(defaultDays)
@@ -24,11 +24,22 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
             <h3 className="text-[1.06rem] font-semibold text-slate-900 leading-tight tracking-tight">{book.title}</h3>
             <p className="text-slate-600 text-sm mt-0.5">{book.author || 'Unknown author'}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${available ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'}`}>
               {available ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Clock className="h-3.5 w-3.5" aria-hidden />}
               {available ? 'Available' : 'On loan'}
             </span>
+            {onDelete && (
+              <button
+                type="button"
+                className="btn-ghost p-1.5 rounded-md hover:bg-red-50 text-red-600"
+                aria-label="Delete book"
+                onClick={() => onDelete(book._id)}
+                title="Delete book"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
         {book.ISBN && <p className="text-xs text-slate-500 mt-2">ISBN: {book.ISBN}</p>}
