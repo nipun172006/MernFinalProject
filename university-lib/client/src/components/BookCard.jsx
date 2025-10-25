@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { CheckCircle2, Clock } from 'lucide-react'
 
 export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings }) {
   const available = (book?.availableCopies ?? 0) > 0
@@ -9,10 +10,10 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
   const labelFor = (d) => (d === 7 ? '1w' : d === 14 ? '2w' : d === 21 ? '3w' : '4w')
 
   return (
-    <div className="card overflow-hidden border border-slate-200/70 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white">
-      <div className="h-40 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+    <div className="card overflow-hidden border border-slate-200/70 rounded-xl shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 bg-white group">
+      <div className="h-40 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center overflow-hidden">
         {book?.coverImageUrl ? (
-          <img src={book.coverImageUrl} alt={book.title} className="max-h-full max-w-full object-cover" />
+          <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />
         ) : (
           <span className="text-slate-400">No Image</span>
         )}
@@ -20,11 +21,14 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[1.05rem] font-semibold text-slate-900 leading-tight tracking-tight">{book.title}</h3>
-            <p className="text-slate-500 text-sm mt-0.5">{book.author || 'Unknown author'}</p>
+            <h3 className="text-[1.06rem] font-semibold text-slate-900 leading-tight tracking-tight">{book.title}</h3>
+            <p className="text-slate-600 text-sm mt-0.5">{book.author || 'Unknown author'}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${available ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'}`}>{available ? 'Available' : 'On loan'}</span>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${available ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'}`}>
+              {available ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Clock className="h-3.5 w-3.5" aria-hidden />}
+              {available ? 'Available' : 'On loan'}
+            </span>
           </div>
         </div>
         {book.ISBN && <p className="text-xs text-slate-500 mt-2">ISBN: {book.ISBN}</p>}
@@ -45,7 +49,7 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
           <div className="mt-4 space-y-3">
             <div>
               <div className="text-xs text-slate-500 mb-1">Loan duration</div>
-              <div className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100">
+              <div className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100/80 border border-slate-200">
                 {durations.map((d) => {
                   const selected = durationDays === d
                   return (
@@ -53,7 +57,7 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
                       key={d}
                       type="button"
                       aria-pressed={selected}
-                      className={`px-3 py-1 rounded-full text-sm transition-colors ${selected ? 'bg-brand-accent text-white shadow' : 'text-slate-700 hover:bg-white hover:shadow-sm'}`}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37] ${selected ? 'bg-[#d4af37] text-white shadow' : 'text-slate-700 hover:bg-white'}`}
                       onClick={() => setDurationDays(d)}
                     >
                       {labelFor(d)}
@@ -62,7 +66,7 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
                 })}
               </div>
             </div>
-            <button className="btn w-full bg-brand-accent hover:opacity-90 shadow-sm" onClick={() => onBorrow(book._id, durationDays)}>Borrow</button>
+            <button className="w-full inline-flex items-center justify-center rounded-lg bg-[#d4af37] text-white px-4 py-2 font-medium shadow hover:opacity-95 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]" onClick={() => onBorrow(book._id, durationDays)}>Borrow</button>
           </div>
         )}
 

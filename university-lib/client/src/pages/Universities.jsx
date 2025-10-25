@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import SiteHeader from '../components/SiteHeader'
-import { Search, Building2, Copy, Check, LogIn } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Search, Building2, Copy, Check, ArrowRight } from 'lucide-react'
 
 export default function Universities() {
   const [list, setList] = useState([])
@@ -97,25 +98,25 @@ export default function Universities() {
                 const isCopied = copied === u.domain
                 return (
                   <article key={u._id} className="card p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" aria-label={`${u.name} ${u.domain}`}>
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="h-10 w-10 rounded-lg bg-brand-accent/10 text-brand-accent flex items-center justify-center" aria-hidden>
                         <Building2 className="h-5 w-5" />
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="text-lg font-semibold text-slate-900">{u.name}</div>
                         <div className="mt-1 inline-flex items-center gap-2">
                           <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200">{u.domain}</span>
                           <span className="text-xs text-slate-500">Joined {joined}</span>
                         </div>
                       </div>
+                      <Link to="/login/student" className="text-brand-accent text-sm inline-flex items-center gap-1 hover:underline shrink-0" aria-label="Start session">
+                        Start <ArrowRight className="h-4 w-4" />
+                      </Link>
                     </div>
-                    <div className="mt-5 flex gap-2">
-                      <button onClick={() => copy(u.domain)} className="btn-outline flex-1" aria-label={`Copy ${u.domain} to clipboard`}>
-                        {isCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />} {isCopied ? 'Copied' : 'Copy domain'}
+                    <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+                      <button onClick={() => copy(u.domain)} className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-accent" aria-label={`Copy ${u.domain} to clipboard`}>
+                        {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} <span>{isCopied ? 'Copied' : 'Copy domain'}</span>
                       </button>
-                      <a href="/login" className="btn flex-1" aria-label="Go to login">
-                        <LogIn className="h-4 w-4 mr-2" /> Start session
-                      </a>
                     </div>
                   </article>
                 )

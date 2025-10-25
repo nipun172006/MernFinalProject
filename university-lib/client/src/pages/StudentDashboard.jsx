@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
 import SiteHeader from '../components/SiteHeader'
 import BookCard from '../components/BookCard'
-import { Search, Loader2, X } from 'lucide-react'
+import { Search, Loader2, X, Filter } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function StudentDashboard() {
@@ -17,6 +17,7 @@ export default function StudentDashboard() {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all') // all | available | onloan
   const abortRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -90,6 +91,14 @@ export default function StudentDashboard() {
     }
   }, [query])
 
+  // Helper: apply availability filter to a list of books
+  const filterBooksByStatus = (arr) => {
+    if (!Array.isArray(arr)) return []
+    if (statusFilter === 'available') return arr.filter((b) => (b?.availableCopies ?? 0) > 0)
+    if (statusFilter === 'onloan') return arr.filter((b) => (b?.availableCopies ?? 0) <= 0)
+    return arr
+  }
+
   // No sidebar/anchors on this page anymore; dedicated pages handle sections
 
   if (loading) return <div className="p-6">Loading...</div>
@@ -111,11 +120,11 @@ export default function StudentDashboard() {
               <div className="fixed right-6 top-20 z-50 card bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 shadow-sm">{toast}</div>
             )}
 
-            <div className="mt-6 flex items-center gap-2">
+            <div className="mt-6 flex items-center gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  className="input pl-9 pr-9"
+                  className="input pl-9 pr-10 rounded-full"
                   placeholder="Search by title, author or ISBN"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -124,12 +133,33 @@ export default function StudentDashboard() {
                   <button
                     type="button"
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                     onClick={() => setQuery('')}
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
+              </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-sm text-slate-600">Filter:</span>
+                <button
+                  type="button"
+                  aria-pressed={statusFilter==='all'}
+                  onClick={() => setStatusFilter('all')}
+                  className={`${statusFilter==='all' ? 'btn' : 'btn-outline'} px-3 py-1.5 rounded-full text-sm`}
+                >All</button>
+                <button
+                  type="button"
+                  aria-pressed={statusFilter==='available'}
+                  onClick={() => setStatusFilter('available')}
+                  className={`${statusFilter==='available' ? 'btn' : 'btn-outline'} px-3 py-1.5 rounded-full text-sm`}
+                >Available</button>
+                <button
+                  type="button"
+                  aria-pressed={statusFilter==='onloan'}
+                  onClick={() => setStatusFilter('onloan')}
+                  className={`${statusFilter==='onloan' ? 'btn' : 'btn-outline'} px-3 py-1.5 rounded-full text-sm`}
+                >On loan</button>
               </div>
               {searchLoading && <Loader2 className="animate-spin h-5 w-5 text-brand-accent" />}
             </div>
@@ -143,8 +173,8 @@ export default function StudentDashboard() {
             {!!searchResults.length && (
               <section className="mt-6">
                 <h3 className="text-xl font-semibold text-slate-800">Search Results</h3>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {searchResults.map((b) => (
+                <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filterBooksByStatus(searchResults).map((b) => (
                     <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
                   ))}
                 </div>
@@ -155,8 +185,8 @@ export default function StudentDashboard() {
               {allBooks.length === 0 ? (
                 <div className="text-slate-500">No books yet. Ask your admin to add books.</div>
               ) : (
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-2">
-                  {allBooks.map((b) => (
+                <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-2">
+                  {filterBooksByStatus(allBooks).map((b) => (
                     <BookCard key={b._id} book={b} onBorrow={checkout} finePerDay={settings?.finePerDay} settings={settings} />
                   ))}
                 </div>
