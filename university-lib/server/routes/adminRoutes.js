@@ -11,10 +11,18 @@ router.use(auth, role('Admin'));
 // POST /api/admin/books - create a new book for admin's university
 router.post('/books', async (req, res) => {
   try {
-    const { title, author, ISBN, coverImageUrl, description, totalCopies } = req.body;
+    const { title, author, ISBN, coverImageUrl, description, totalCopies, genres, rating } = req.body;
     if (!title || !ISBN || totalCopies == null) {
       return res.status(400).json({ message: 'title, ISBN, totalCopies required' });
     }
+
+    // Normalize genres: accept array or comma/semicolon/pipe separated string
+    let genresArr = []
+    if (Array.isArray(genres)) genresArr = genres.filter(Boolean).map((g) => String(g).trim()).filter(Boolean)
+    else if (typeof genres === 'string') genresArr = genres.split(/[;|,]/g).map((g) => g.trim()).filter(Boolean)
+
+    const r = Number(rating)
+    const ratingVal = Number.isFinite(r) ? Math.max(0, Math.min(5, r)) : undefined
 
     const book = await BookItem.create({
       title,
@@ -23,6 +31,8 @@ router.post('/books', async (req, res) => {
       coverImageUrl,
       description,
       totalCopies: Number(totalCopies),
+      genres: genresArr,
+      ...(ratingVal !== undefined ? { rating: ratingVal } : {}),
       universityRef: req.user.universityRef,
     });
 
@@ -81,6 +91,10 @@ router.post('/books/import', async (req, res) => {
       const coverImageUrl = (cols[idx('coverimageurl')] || '').trim();
       const description = (cols[idx('description')] || '').trim();
       const totalCopies = Number((cols[idx('totalcopies')] || '0').trim());
+      const genresStr = idx('genres') !== -1 ? (cols[idx('genres')] || '').trim() : ''
+      const ratingStr = idx('rating') !== -1 ? (cols[idx('rating')] || '').trim() : ''
+      const genres = genresStr ? genresStr.split(/[;|,]/g).map((g) => g.trim()).filter(Boolean) : []
+      const rating = ratingStr ? Math.max(0, Math.min(5, Number(ratingStr))) : undefined
       if (!title || !ISBN || !(totalCopies >= 0)) continue;
 
       const existing = await BookItem.findOne({ ISBN, universityRef: req.user.universityRef });
@@ -90,10 +104,12 @@ router.post('/books/import', async (req, res) => {
         existing.coverImageUrl = coverImageUrl;
         existing.description = description;
         existing.totalCopies = totalCopies;
+        existing.genres = genres;
+        if (rating !== undefined && Number.isFinite(rating)) existing.rating = rating;
         await existing.save();
         updated++;
       } else {
-        await BookItem.create({ title, author, ISBN, coverImageUrl, description, totalCopies, universityRef: req.user.universityRef });
+        await BookItem.create({ title, author, ISBN, coverImageUrl, description, totalCopies, genres, ...(rating!==undefined?{rating}:{}), universityRef: req.user.universityRef });
         created++;
       }
     }
@@ -169,7 +185,7 @@ router.patch('/university/settings', async (req, res) => {
 router.put('/books/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { title, author, coverImageUrl, description, totalCopies } = req.body || {}
+    const { title, author, coverImageUrl, description, totalCopies, genres, rating } = req.body || {}
     const update = {}
     if (title !== undefined) update.title = String(title)
     if (author !== undefined) update.author = String(author)
@@ -179,6 +195,17 @@ router.put('/books/:id', async (req, res) => {
       const v = Number(totalCopies)
       if (!Number.isFinite(v) || v < 0) return res.status(400).json({ message: 'totalCopies must be >= 0' })
       update.totalCopies = Math.floor(v)
+    }
+    if (genres !== undefined) {
+      let genresArr = []
+      if (Array.isArray(genres)) genresArr = genres.filter(Boolean).map((g) => String(g).trim()).filter(Boolean)
+      else if (typeof genres === 'string') genresArr = genres.split(/[;|,]/g).map((g) => g.trim()).filter(Boolean)
+      update.genres = genresArr
+    }
+    if (rating !== undefined) {
+      const r = Number(rating)
+      if (!Number.isFinite(r) || r < 0 || r > 5) return res.status(400).json({ message: 'rating must be between 0 and 5' })
+      update.rating = r
     }
     if (Object.keys(update).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
 

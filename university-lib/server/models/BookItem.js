@@ -7,6 +7,8 @@ const BookItemSchema = new mongoose.Schema(
     ISBN: { type: String, required: true, trim: true },
     coverImageUrl: { type: String, trim: true, default: '' },
     description: { type: String, trim: true, default: '' },
+    genres: { type: [String], default: [], index: true },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
     totalCopies: { type: Number, required: true, min: 0 },
     borrowCount: { type: Number, default: 0 },
     universityRef: { type: mongoose.Schema.Types.ObjectId, ref: 'University', required: true },

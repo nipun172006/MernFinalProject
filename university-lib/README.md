@@ -122,6 +122,21 @@ npm run preview
 
 ### Book model fields
 
-- `title` (required), `author`, `ISBN` (required), `coverImageUrl`, `description`, `totalCopies` (required), `borrowCount` (popularity), `availableCopies` (virtual), `activeLoans` (virtual)
+- `title` (required), `author`, `ISBN` (required), `coverImageUrl`, `description`, `genres` (string[]), `rating` (0–5), `totalCopies` (required), `borrowCount` (popularity), `availableCopies` (virtual), `activeLoans` (virtual)
 
 Popularity increases when a book is checked out.
+
+### Student filters & sort
+
+- Genre filter: pass `genres` as comma-separated list (e.g., `genres=physics,comics`).
+- Sort options: `sort=rating` or `sort=popularity`.
+- Endpoints supporting these params:
+   - `GET /api/student/books/all?genres=&sort=`
+   - `GET /api/student/books/search?q=&genres=&sort=`
+   - `GET /api/student/genres` returns distinct genres for the current university.
+
+### Admin CSV import
+
+Optional columns supported in addition to required ones:
+- `genres` (comma/semicolon/pipe separated)
+- `rating` (0–5)

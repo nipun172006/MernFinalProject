@@ -3,7 +3,7 @@ import axios from 'axios'
 import SiteHeader from '../components/SiteHeader'
 
 export default function AdminAddBook() {
-  const [form, setForm] = useState({ title: '', author: '', ISBN: '', coverImageUrl: '', description: '', totalCopies: 1 })
+  const [form, setForm] = useState({ title: '', author: '', ISBN: '', coverImageUrl: '', description: '', totalCopies: 1, genres: '', rating: 0 })
   const [csvText, setCsvText] = useState('')
   const [importing, setImporting] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -12,8 +12,11 @@ export default function AdminAddBook() {
     e.preventDefault()
     setSaving(true)
     try {
-      await axios.post('/api/admin/books', { ...form, totalCopies: Number(form.totalCopies) })
-      setForm({ title: '', author: '', ISBN: '', coverImageUrl: '', description: '', totalCopies: 1 })
+      const payload = { ...form, totalCopies: Number(form.totalCopies) }
+      if (typeof payload.genres === 'string') payload.genres = payload.genres.split(/[,;|]/g).map((g)=>g.trim()).filter(Boolean)
+      payload.rating = Number(payload.rating)
+      await axios.post('/api/admin/books', payload)
+      setForm({ title: '', author: '', ISBN: '', coverImageUrl: '', description: '', totalCopies: 1, genres: '', rating: 0 })
       alert('Book added')
     } catch (err) {
       alert(err?.response?.data?.message || 'Failed to add')
@@ -66,6 +69,14 @@ export default function AdminAddBook() {
               <textarea className="textarea" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div>
+              <label className="block text-sm font-medium text-slate-700">Genres (comma/semicolon separated)</label>
+              <input className="input" value={form.genres} onChange={(e) => setForm({ ...form, genres: e.target.value })} placeholder="physics, comics, anime" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Rating (0–5)</label>
+              <input className="input" type="number" min={0} max={5} step="0.1" value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })} />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700">Total Copies</label>
               <input className="input" type="number" min={0} value={form.totalCopies} onChange={(e) => setForm({ ...form, totalCopies: e.target.value })} required />
             </div>
@@ -81,7 +92,7 @@ export default function AdminAddBook() {
               <textarea className="textarea" rows={6} placeholder="title,author,ISBN,coverImageUrl,description,totalCopies" value={csvText} onChange={(e) => setCsvText(e.target.value)} />
               <div className="flex gap-2">
                 <button className="btn" disabled={importing}>{importing ? 'Importing…' : 'Import CSV'}</button>
-                <button type="button" className="btn-outline" onClick={() => setCsvText(`title,author,ISBN,coverImageUrl,description,totalCopies\nClean Code,Robert C. Martin,9780132350884,https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop,Handbook of agile software craftsmanship,3`)}>
+                <button type="button" className="btn-outline" onClick={() => setCsvText(`title,author,ISBN,coverImageUrl,description,totalCopies,genres,rating\nClean Code,Robert C. Martin,9780132350884,https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop,Handbook of agile software craftsmanship,3,software;craft,4.7`)}>
                   Fill Sample
                 </button>
               </div>

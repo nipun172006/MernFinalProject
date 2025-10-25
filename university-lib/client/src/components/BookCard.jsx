@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CheckCircle2, Clock, Trash2 } from 'lucide-react'
+import { CheckCircle2, Clock, Trash2, Star } from 'lucide-react'
 
 export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDay, settings, onDelete }) {
   const available = (book?.availableCopies ?? 0) > 0
@@ -23,12 +23,27 @@ export default function BookCard({ book, onBorrow, onReturn, isLoaned, finePerDa
           <div>
             <h3 className="text-[1.06rem] font-semibold text-slate-900 leading-tight tracking-tight">{book.title}</h3>
             <p className="text-slate-600 text-sm mt-0.5">{book.author || 'Unknown author'}</p>
+            {(Array.isArray(book.genres) && book.genres.length > 0) && (
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {book.genres.slice(0, 2).map((g) => (
+                  <span key={g} className="badge badge-info">{g}</span>
+                ))}
+                {book.genres.length > 2 && (
+                  <span className="badge">+{book.genres.length - 2}</span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${available ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'}`}>
               {available ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Clock className="h-3.5 w-3.5" aria-hidden />}
               {available ? 'Available' : 'On loan'}
             </span>
+            {typeof book.rating === 'number' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200">
+                <Star className="h-3.5 w-3.5 text-amber-500" /> {Number(book.rating).toFixed(1)}
+              </span>
+            )}
             {onDelete && (
               <button
                 type="button"
