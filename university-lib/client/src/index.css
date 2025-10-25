@@ -18,18 +18,41 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg bg-brand-accent text-white px-4 py-2 font-medium shadow hover:opacity-95 transition;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium text-white shadow transition hover:opacity-95 active:scale-[0.98];
+    background: linear-gradient(135deg, var(--color-brand-accent) 0%, #c69649 100%);
   }
+
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-lg border border-brand-accent text-brand-accent px-4 py-2 font-medium hover:bg-brand-accent/10 transition;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium border transition text-brand-accent border-brand-accent/70 hover:bg-brand-accent/10;
   }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset;
+  }
+  .badge-success { @apply bg-emerald-50 text-emerald-700 ring-emerald-200; }
+  .badge-warn { @apply bg-amber-50 text-amber-700 ring-amber-200; }
+  .badge-info { @apply bg-sky-50 text-sky-700 ring-sky-200; }
+
+  .chip { @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm; }
+
   .card {
-    @apply rounded-xl bg-white shadow-card border border-slate-200;
+    @apply rounded-xl bg-white shadow-card border border-slate-200/70 hover:shadow-lg hover:-translate-y-0.5 transition;
   }
+
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/50 shadow-card;
+  }
+
   .input {
     @apply mt-1 w-full rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent;
   }
   .textarea {
     @apply mt-1 w-full rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent resize-y;
   }
+
+  .skeleton { @apply animate-pulse bg-slate-200/70 rounded; }
 }

@@ -28,7 +28,13 @@ export default function AvailableSoon() {
   }, [])
 
   const borrowed = useMemo(() => {
-    return (allBooks || []).filter(b => (b?.availableCopies ?? 0) <= 0)
+    const arr = (allBooks || []).filter(b => (b?.availableCopies ?? 0) <= 0)
+    // Sort by soonest due date ascending if available
+    return arr.sort((a, b) => {
+      const da = a?.soonestDueDate ? new Date(a.soonestDueDate).getTime() : Infinity
+      const db = b?.soonestDueDate ? new Date(b.soonestDueDate).getTime() : Infinity
+      return da - db
+    })
   }, [allBooks])
 
   if (loading) return <div className="p-4">Loading...</div>
@@ -39,12 +45,15 @@ export default function AvailableSoon() {
       <main className="flex-1 bg-slate-50">
         <div className="w-full px-4 py-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">Available Soon</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Available Soon</h2>
+              <p className="text-sm text-slate-600">Sorted by the soonest expected return.</p>
+            </div>
             <span className="text-sm text-slate-600">{borrowed.length} items</span>
           </div>
           {error && <div className="mb-4 text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">{error}</div>}
           {borrowed.length === 0 ? (
-            <div className="text-slate-500">No borrowed books currently. Check back later.</div>
+            <div className="card p-6 text-slate-600">No borrowed books currently. Check back later.</div>
           ) : (
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {borrowed.map((b) => (

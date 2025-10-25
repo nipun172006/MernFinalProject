@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import SiteHeader from '../components/SiteHeader'
+import { Clock, CheckCircle2 } from 'lucide-react'
 
 export default function MyLoans() {
   const [loans, setLoans] = useState([])
@@ -33,12 +34,15 @@ export default function MyLoans() {
       <main className="flex-1 bg-slate-50">
         <div className="w-full px-4 py-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">My Loans</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">My Loans</h2>
+              <p className="text-sm text-slate-600">Return on time to avoid fines.</p>
+            </div>
             <span className="text-sm text-slate-600">{loans.length} items</span>
           </div>
           {error && <div className="mb-4 text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">{error}</div>}
           {loans.length === 0 ? (
-            <div className="text-slate-500">No loans yet. Borrow a book to see it here.</div>
+            <div className="card p-6 text-slate-600">No loans yet. Borrow a book to see it here.</div>
           ) : (
             <ul className="space-y-3">
               {loans.map((l) => (
@@ -54,7 +58,13 @@ export default function MyLoans() {
                     <div>
                       <div className="font-semibold text-slate-900">{l.bookItemRef?.title || 'Untitled'}</div>
                       {l.bookItemRef?.author && <div className="text-sm text-slate-600">{l.bookItemRef.author}</div>}
-                      <div className="text-xs text-slate-500">Due: {new Date(l.dueDate).toLocaleString()}</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        {!l.returnDate ? (
+                          <span className="badge badge-warn"><Clock className="h-3.5 w-3.5" /> Due: {new Date(l.dueDate).toLocaleString()}</span>
+                        ) : (
+                          <span className="badge badge-success"><CheckCircle2 className="h-3.5 w-3.5" /> Returned</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {!l.returnDate ? (
