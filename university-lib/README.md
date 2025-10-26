@@ -1,6 +1,6 @@
 # University Library (MERN)
 
-Multi-tenant university library system with JWT auth in HttpOnly cookies.
+Multi-tenant university library system with JWT auth in HttpOnly cookies. Universities can register their library in our website and handle all the process of borrowing and returning books easily.
 
 ## Structure
 
